@@ -194,11 +194,12 @@ const MANUAL = [
   ['Alibaba · stage illusions', 'https://www.alibaba.com/trade/search?SearchText=stage+magic+illusion+props'],
   ['Alibaba · YW Power storefront', 'https://ywpower.en.alibaba.com/productgrouplist-959990819/Stage_Magic_Illusions.html'],
   ['Potter & Potter auctions', 'https://auction.potterauctions.com/auctions'],
+  ['Used Magic Illusions (Facebook)', 'https://www.facebook.com/usedmagicillusions/'],
 ];
 function manual() {
   $('#manual').innerHTML = '<span class="lbl">Open manually</span>' +
     MANUAL.map(([t, u]) => `<a href="${u}" target="_blank" rel="noopener">${t} ↗</a>`).join('') +
-    '<span class="n" style="color:var(--muted)">Alibaba blocks automated scans — these open in your browser, where they work.</span>';
+    '<span class="n" style="color:var(--muted)">Alibaba and Facebook require a human session — these open in your browser, where they work.</span>';
 }
 
 /* ── Scanning ──────────────────────────────────────── */

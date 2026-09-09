@@ -120,12 +120,14 @@ Measured on a real deep sweep (2,974 raw listings):
 
 | Source | Raw | Verdict |
 |---|---|---|
-| **eBay** | 2,242 | The mother lode. Nearly every real find. |
+| **eBay** | 2,484 | Volume leader — most raw listings, most noise to filter. |
+| **Magic Auction** | 96 | Highest signal per listing. A dedicated used-illusion market: nearly half survive grading, and it publishes its own `its-a-steal-sale` and `reduced` categories. Everything is an auction, so prices are floors. |
 | Craigslist | 433 | 40 metros; genuine finds are rare but they're the cheap ones. |
 | The Magic Café | 101 | Leads, not listings — but this is where grails surface first. |
 | AliExpress | 191 | Works, but ~all sub-$20 close-up props. Floating tables are the exception. |
 | Potter & Potter | 7 | Auction events, incl. *Houdini Returns: The Centennial Auction*. |
-| Alibaba | 0 | **CAPTCHA-blocked.** Reported honestly in the UI with a manual link. |
+| Alibaba | 0 | **CAPTCHA-blocked**, including supplier storefronts and from a clean browser profile. Manual link only. |
+| Facebook | — | **Login-walled.** `facebook.com/usedmagicillusions` returns a "Log In" page with no posts to anyone unauthenticated. Manual link only. |
 
 Alibaba answers the first request then locks out the search endpoint. Homepage priming
 (the trick that beats eBay) does not help. Rather than build a CAPTCHA solver, the app
