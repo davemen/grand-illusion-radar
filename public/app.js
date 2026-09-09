@@ -217,6 +217,7 @@ async function scan(deep) {
 }
 
 function events() {
+  if (SNAPSHOT) return;   // static build has no server to stream from
   const es = new EventSource('/api/events');
   let lastHealth = {};
   es.onmessage = e => {
