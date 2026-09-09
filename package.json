@@ -1,0 +1,20 @@
+{
+  "name": "grand-illusion-radar",
+  "version": "1.0.0",
+  "description": "Live deal radar for genuine stage illusions \u2014 Henning & Copperfield scale, not pocket tricks.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node tools/test-classify.mjs",
+    "reclassify": "node tools/reclassify.mjs",
+    "publish": "node tools/build-static.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "express": "^5.2.1",
+    "playwright": "^1.63.0"
+  }
+}
