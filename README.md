@@ -7,7 +7,49 @@ Copperfield sort — not pocket tricks, card gimmicks or optical-illusion poster
 npm start          # → http://localhost:7777
 ```
 
-Then hit **Quick Scan** (~2 min) or **Deep Sweep** (~9 min).
+Then hit **Quick Scan** (~3 min) or **Deep Sweep** (~9 min).
+
+**Live snapshot:** https://davemen.github.io/grand-illusion-radar/
+
+## Why the scanner stays local
+
+The site is published, the *scanner* is not — and that is deliberate. eBay and
+Craigslist block datacenter IPs and non-browser TLS fingerprints, so a scanner running
+on Vercel or GitHub Actions finds nothing. It works precisely because it runs from a
+home connection with real Chrome. So:
+
+```bash
+npm start            # scan locally, where the sources answer
+npm run publish      # write docs/ (UI + data.json snapshot)
+git commit -am "…" && git push     # GitHub Pages serves it
+```
+
+One frontend serves both: it calls the API when there is one, and falls back to the
+published `data.json` on Pages (saves/hides then live in `localStorage`).
+
+## What counts as a deal
+
+A deal is scored against **observed market comps** — the median asking price of that
+illusion across everything swept — falling back to a typical new price only when there
+are fewer than 3 comps. This matters: an Abbott Chair Suspension reads as −89% against a
+guessed $5,000 MSRP, but against 7 real asking prices it is −28%. The card always shows
+which basis it used.
+
+Guards that keep the list honest:
+
+- **Purchasable only.** Forum threads are excluded; The Magic Café has no public
+  classifieds forum (all 40 categories checked), so its discussion posts never appear
+  as listings. Only explicit offers survive, flagged as leads.
+- **A live auction's bid is not a price.** Auctions are detected and their deal score
+  is cut by 30, because the current bid will climb.
+- **Too good to be true.** A discount past 85% almost always means a small tabletop
+  version matched a big illusion's name — a "see thru tip over *box*" against a full
+  tip over *trunk*. Past that threshold we require a known builder or real evidence of
+  scale before believing it.
+- Deals are suppressed entirely when any negative matched, or below a $150 floor.
+
+Sorted by **🔥 Screaming deals** by default; everything without a discount is tucked
+below a fold you can expand.
 
 **List / Gallery** toggles density. List is the default — uniform 40px rows, ~16 findings
 per screen against the gallery's 10, with the thumbnail shrunk to a 54px chip. Gallery is
