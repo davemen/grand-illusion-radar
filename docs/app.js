@@ -126,9 +126,11 @@ function card(l) {
   if (l.forSale) flags.push('For sale');
   const flagHTML = flags.length ? `<div class="flag">${flags.map(f => `<span>${f}</span>`).join('')}</div>` : '';
   // Flags live inside the thumb so they never collide with the footer meta row.
+  // The thumb is a link: clicking the photo opens the listing.
+  const openAttrs = `href="${esc(l.url)}" target="_blank" rel="noopener" title="Open listing"`;
   const img = l.image
-    ? `<div class="thumb"><img loading="lazy" src="${esc(l.image)}" onerror="this.parentElement.classList.add('none');this.remove()">${flagHTML}</div>`
-    : `<div class="thumb none">✦${flagHTML}</div>`;
+    ? `<a class="thumb" ${openAttrs}><img loading="lazy" src="${esc(l.image)}" onerror="this.parentElement.classList.add('none');this.remove()">${flagHTML}</a>`
+    : `<a class="thumb none" ${openAttrs}>✦${flagHTML}</a>`;
 
   const tags = [
     ...l.illusions.slice(0, 2).map(i => `<span class="tag ill">${esc(i.name)}</span>`),
@@ -142,7 +144,7 @@ function card(l) {
     ${l.deal ? `<div class="deal" title="${esc(l.deal.basis)}${l.deal.provisional ? ' — live auction, bid will climb' : ''}">−${l.deal.pct}%${l.deal.provisional ? ' bid' : ''}</div>` : ''}
     <div class="body">
       <div class="price">${money(l.price)}${l.deal ? `<small>vs ${money(l.deal.ref)} · ${esc(l.deal.basis)}</small>` : ''}</div>
-      <h3 class="title">${esc(l.title)}</h3>
+      <h3 class="title"><a ${openAttrs} class="tlink">${esc(l.title)}</a></h3>
       ${tags ? `<div class="tags">${tags}</div>` : ''}
       <div class="conf" title="Evidence ${l.confidence}%"><i style="width:${Math.min(100, l.confidence)}%"></i></div>
       <div class="meta">
