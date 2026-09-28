@@ -1,0 +1,52 @@
+{
+  "site": "illusion_relevance",
+  "question": "stage_illusion",
+  "n": 495,
+  "failed_open": 0,
+  "phi_refused": 0,
+  "agreement": 0.265,
+  "labeled_disagreements": 31,
+  "unlabeled_disagreements": 333,
+  "reliability": [
+    {
+      "bin": "0.50-0.60",
+      "n": 66,
+      "accuracy": 0.53
+    },
+    {
+      "bin": "0.60-0.70",
+      "n": 92,
+      "accuracy": 0.533
+    },
+    {
+      "bin": "0.70-0.80",
+      "n": 102,
+      "accuracy": 0.48
+    },
+    {
+      "bin": "0.80-0.90",
+      "n": 92,
+      "accuracy": 0.152
+    },
+    {
+      "bin": "0.90-0.95",
+      "n": 63,
+      "accuracy": 0.063
+    },
+    {
+      "bin": "0.95-1.00",
+      "n": 80,
+      "accuracy": 0.087
+    }
+  ],
+  "thresholds": {},
+  "half_minimum_filter": {
+    "cutoff_p_yes": 0.01,
+    "would_drop": 0,
+    "of": 495,
+    "missed_positives": 0
+  },
+  "option_order": null,
+  "enough_data": true,
+  "note": "Accuracy is against hand labels where present, else against the baseline (agreement, not truth)."
+}

@@ -162,3 +162,25 @@ price and it immediately becomes searchable, scorable and deal-tracked. Add a bu
 
 Data lives in `data/` (`listings.json`, `state.json`, `user.json` for saves/hides).
 Nothing leaves your machine.
+
+## Shadow-scoring listings with TypeSafe Jev (off by default)
+
+`lib/jev.mjs` can score every graded listing with TypeSafe Jev — one request asking whether
+it's a genuine full-size stage illusion, what kind of thing it is, and whether it's actually
+purchasable — next to the classifier's own verdict, purely for offline comparison. It never
+changes what a scan shows: it's off unless `JEV_SHADOW=1`, it fails open (a Jev error just
+means no row gets logged), and it never does arithmetic on Jev's answer. Turning it on for a
+real scan appends one JSONL row per listing to `data/jev-shadow.jsonl`.
+
+The questions and criteria live in `jev.config.json`. To measure it offline against
+what's already on disk, without scanning anything:
+
+```bash
+node tools/jev-export.mjs > shadow-inputs.jsonl
+python3 ~/.claude/skills/jev-savings/scripts/shadow.py jev.config.json illusion_relevance shadow-inputs.jsonl
+```
+
+See `shadow/illusion_relevance/summary.json` for agreement and the reliability table, and
+`shadow/illusion_relevance/labels.jsonl` for the hand-checked sample. `npm test` also runs
+`tools/test-jev.mjs`, which checks the off-by-default contract and that only named fields
+(title, description, price, source) ever leave the process.

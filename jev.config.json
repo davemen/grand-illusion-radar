@@ -1,0 +1,75 @@
+{
+  "_comment": "TypeSafe Jev shadow scoring for The Grand Illusion Radar. See lib/jev.mjs, tools/jev-export.mjs, and shadow/illusion_relevance/summary.json for the offline calibration run. Thresholds are placeholders until shadow.py's proposals are read against the reliability table (jev-savings migration-protocol.md, step 4) — do not treat these as live cutoffs.",
+  "model": "jev-1.13.0",
+  "route": null,
+  "sites": {
+    "illusion_relevance": {
+      "_where": "lib/jev.mjs, called from lib/engine.mjs behind JEV_SHADOW=1. State is the classify()-graded listing's own public fields; the current rule/lexicon verdict is logged alongside as baseline, never sent to Jev.",
+      "state_shape": {
+        "title": "listing title, as scraped",
+        "description": "listing description or subtitle, trimmed to ~500 chars (empty string when the source never captured one, which is every source today)",
+        "price": "priceText or price formatted as text, e.g. '$3,200' or 'no price listed'",
+        "source": "sourceLabel, e.g. 'eBay', 'Magic Auction', 'The Magic Café'"
+      },
+      "shadow_question": "stage_illusion",
+      "questions": {
+        "stage_illusion": {
+          "type": "noul",
+          "instructions": "Based on `title`, `description`, `price` and `source`, is this a full-size stage illusion — a crated, performer-sized magic apparatus like a sawing cabinet, substitution trunk, or levitation frame — rather than a close-up trick, card gimmick, book, poster, or optical-illusion art object?",
+          "criteria": {
+            "true": {
+              "what": "a large, performer-scale illusion prop: a cabinet, trunk, box, table, or frame built for a stage act",
+              "examples": [
+                "Zig Zag Girl Illusion - professional stage illusion, local pickup only, on casters",
+                "Owen Magic Supreme Sub Trunk Substitution Trunk illusion, crated, freight",
+                "John Gaughan Asrah Levitation - ex Doug Henning show",
+                "Thin Model Sawing In Half Illusion, stage size, fits a person, $2900 obo"
+              ]
+            },
+            "false": {
+              "what": "close-up magic, card gimmicks, books/plans, DVDs, posters, jewelry, novelty items, or anything using 'illusion' as a brand or decorative word rather than describing a stage prop",
+              "examples": [
+                "ZIG ZAG PLAYING CARD SUPER GREAT ILLUSION",
+                "JUMBO ZIG ZAG CARD MAGIC TRICK - Stage Prop Poker Size Illusion Gimmick",
+                "Building Plans for Robert Harbin's Zig Zag Illusion!",
+                "Optical Illusion Wall Art Poster Print 24x36",
+                "Illusion Lace Wedding Dress Neckline Bridal Gown",
+                "Marvin's Magic 400 Tricks & Illusions Set",
+                "Magic Trick Melon from Box Prop Stage Illusion Gimmick Party Goods E342",
+                "DP Group Dice Box Magic Trick Gimmick Prop Stage Illusion Rare Party Goods E471"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "type": "choice",
+          "instructions": "What kind of thing is this listing describing, based on `title`, `description`, `price` and `source`?",
+          "criteria": {
+            "illusion_prop": "a full-size stage illusion apparatus (crated, performer-sized)",
+            "close_up_or_gimmick": "a close-up trick, card gimmick, or small novelty prop",
+            "book_or_plans": "building plans, a book, a manual, or instructions",
+            "media": "a DVD, download, or other recorded media",
+            "decorative_or_unrelated": "art, jewelry, clothing, furniture, electronics, or anything using 'illusion'/'magic' as a brand name rather than describing a magic prop",
+            "other": "none of the above, or not enough information to tell"
+          }
+        },
+        "for_sale": {
+          "type": "noul",
+          "instructions": "Is this a purchasable listing — an item actually offered for sale, auction, or best offer — rather than a forum thread, discussion post, wanted ad, or review with no item being sold?",
+          "criteria": {
+            "true": "a marketplace or auction listing with a price or bid, or a classified offering an item",
+            "false": "a forum post, a 'looking for' / wanted ad, a discussion thread, or anything without an actual item on offer"
+          }
+        }
+      },
+      "thresholds": {
+        "stage_illusion_noul_gte": 0.5,
+        "_basis": "placeholder pending shadow.py's proposed act/review cutoffs from the reliability table; never used to gate the live scan while JEV_SHADOW=1"
+      },
+      "before": {
+        "usd_per_month": 0,
+        "basis": "current path is free (rule/lexicon classify(), no LLM call); this site is additive shadow-mode cost only, not a replacement of a billed call"
+      }
+    }
+  }
+}
