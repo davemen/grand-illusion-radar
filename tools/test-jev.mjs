@@ -1,16 +1,34 @@
-// Regression checks for the JEV_SHADOW hook. Unlike test-classify.mjs this never calls
-// the network — it only checks the off-by-default contract and the shape of what would
-// be sent, which is what "shadow mode never touches the live scan" actually depends on.
+// Regression checks for the Jev hooks. Unlike test-classify.mjs this never calls the
+// network (npm test runs it with JEV_RANK=0) — it checks the on/off contract, the banding
+// against jev.config.json's cutoffs, and the shape of what would be sent.
 import assert from 'node:assert/strict';
-import { shadowScore, toState, JEV_SHADOW_ENABLED } from '../lib/jev.mjs';
+import { readFileSync } from 'node:fs';
+import { shadowScore, toState, jevTag, JEV_SHADOW_ENABLED, JEV_RANK_ENABLED } from '../lib/jev.mjs';
 
 assert.equal(JEV_SHADOW_ENABLED, process.env.JEV_SHADOW === '1',
   'JEV_SHADOW_ENABLED must track the env var exactly');
+assert.equal(JEV_RANK_ENABLED, process.env.JEV_RANK !== '0',
+  'JEV_RANK_ENABLED is on unless JEV_RANK=0');
 
-if (process.env.JEV_SHADOW !== '1') {
+if (!JEV_SHADOW_ENABLED && !JEV_RANK_ENABLED) {
   const r = await shadowScore({ title: 'anything', price: 10, source: 'ebay' });
-  assert.equal(r, null, 'shadowScore must return null (no call, no cost) when JEV_SHADOW is unset');
+  assert.equal(r, null, 'shadowScore must return null (no call, no cost) when both modes are off');
 }
+
+// Banding reads the live cutoffs from jev.config.json and only compares, never computes.
+const t = JSON.parse(readFileSync(new URL('../jev.config.json', import.meta.url))).sites.illusion_relevance.thresholds;
+assert.ok(t.demote_below_p_yes < t.review_below_p_yes, 'demote cutoff sits below the review cutoff');
+const at = p => jevTag({ stage_illusion: { noul: p } });
+assert.equal(at(0.01).band, 'not-stage');
+assert.equal(at(t.demote_below_p_yes).band, 'review', 'the demote cutoff itself is review, not hidden');
+assert.equal(at(0.29).band, 'review', 'the lowest labelled true (0.29) must never be hidden');
+assert.equal(at(t.review_below_p_yes).band, 'stage');
+assert.equal(at(0.97).p_yes, 0.97, 'P(yes) is carried through unchanged');
+// Fail open: no answer, a malformed answer, or no config means no tag (listing shows as before).
+assert.equal(jevTag(null), null);
+assert.equal(jevTag({ kind: { choice: 'prop' } }), null);
+assert.equal(jevTag({ stage_illusion: { noul: '0.1' } }), null);
+assert.equal(jevTag({ stage_illusion: { noul: 0.01 } }, null), null);
 
 // State sent to Jev is named fields only — never the classifier's own score/verdict,
 // never raw HTML, never more than the fields listed in jev.config.json's state_shape.

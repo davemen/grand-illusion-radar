@@ -6,7 +6,7 @@ const money = n => n == null ? '—' : '$' + n.toLocaleString(undefined, { maxim
 const VERDICTS = [['grail', 'Grail'], ['confirmed', 'Confirmed'], ['likely', 'Likely'], ['plans', 'Plans'], ['maybe', 'Maybe']];
 const state = {
   verdict: new Set(['grail', 'confirmed', 'likely']), source: new Set(),
-  deals: false, saved: false, forsale: true, showRest: false,
+  deals: false, saved: false, forsale: true, jev: true, showRest: false,
   sort: 'deal', q: '', min: '', max: '', sources: {}, scanning: false,
   view: (() => { try { return localStorage.getItem('gir.view') || 'list'; } catch { return 'list'; } })(),
 };
@@ -44,6 +44,7 @@ function applyFilters(all) {
   if (state.source.size) out = out.filter(l => state.source.has(l.source));
   if (state.deals) out = out.filter(l => l.deal);
   if (state.forsale) out = out.filter(l => l.buyable !== false && l.offer !== 'lead');
+  if (state.jev) out = out.filter(l => l.jev?.band !== 'not-stage');
   if (state.min) out = out.filter(l => (l.price ?? 0) >= +state.min);
   if (state.max) out = out.filter(l => l.price != null && l.price <= +state.max);
   if (state.q) { const rx = new RegExp(state.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
@@ -68,6 +69,7 @@ async function load() {
   if (state.source.size) p.set('source', [...state.source].join(','));
   if (state.deals) p.set('deals', '1');
   if (state.forsale) p.set('forsale', '1');
+  if (state.jev) p.set('jev', '1');
   if (state.saved) p.set('saved', '1');
   if (state.q) p.set('q', state.q);
   if (state.min) p.set('min', state.min);
@@ -124,6 +126,8 @@ function card(l) {
   if (l.priceDropped) flags.push('Price cut');
   if (l.stale) flags.push('Not re-seen');
   if (l.forSale) flags.push('For sale');
+  if (l.jev?.band === 'review') flags.push('Jev: unsure');
+  if (l.jev?.band === 'not-stage') flags.push('Jev: not stage');
   const flagHTML = flags.length ? `<div class="flag">${flags.map(f => `<span>${f}</span>`).join('')}</div>` : '';
   // Flags live inside the thumb so they never collide with the footer meta row.
   // The thumb is a link: clicking the photo opens the listing.
@@ -272,15 +276,15 @@ function events() {
   $('#min').onchange = e => { state.min = e.target.value; load(); };
   $('#max').onchange = e => { state.max = e.target.value; load(); };
   const toggle = (sel, key) => { $(sel).onclick = () => { state[key] = !state[key]; $(sel).classList.toggle('on', state[key]); load(); }; };
-  toggle('#f-deals', 'deals'); toggle('#f-saved', 'saved'); toggle('#f-forsale', 'forsale');
+  toggle('#f-deals', 'deals'); toggle('#f-saved', 'saved'); toggle('#f-forsale', 'forsale'); toggle('#f-jev', 'jev');
   manual();
   document.querySelectorAll('#view .chip').forEach(c =>
     c.onclick = () => { state.view = c.dataset.v; applyView(); });
   applyView();
   $('#clear').onclick = () => {
     state.verdict = new Set(['grail', 'confirmed', 'likely']); state.source.clear();
-    state.deals = state.saved = false; state.forsale = true; state.showRest = false;
-    $('#f-forsale').classList.add('on'); state.q = state.min = state.max = '';
+    state.deals = state.saved = false; state.forsale = state.jev = true; state.showRest = false;
+    $('#f-forsale').classList.add('on'); $('#f-jev').classList.add('on'); state.q = state.min = state.max = '';
     $('#q').value = ''; $('#min').value = ''; $('#max').value = '';
     $('#f-deals').classList.remove('on'); $('#f-saved').classList.remove('on');
     chips($('#verdicts'), VERDICTS, state.verdict, load);

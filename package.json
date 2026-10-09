@@ -5,10 +5,11 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node tools/test-classify.mjs && node tools/test-jev.mjs",
+    "test": "node tools/test-classify.mjs && JEV_RANK=0 node tools/test-jev.mjs",
     "reclassify": "node tools/reclassify.mjs",
     "jev-export": "node tools/jev-export.mjs",
-    "publish": "node tools/build-static.mjs"
+    "publish": "node tools/build-static.mjs",
+    "jev-tag": "node tools/jev-tag.mjs"
   },
   "keywords": [],
   "author": "",

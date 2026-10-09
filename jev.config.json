@@ -1,10 +1,10 @@
 {
-  "_comment": "TypeSafe Jev shadow scoring for The Grand Illusion Radar. See lib/jev.mjs, tools/jev-export.mjs, and shadow/illusion_relevance/summary.json for the offline calibration run. Thresholds are placeholders until shadow.py's proposals are read against the reliability table (jev-savings migration-protocol.md, step 4) — do not treat these as live cutoffs.",
+  "_comment": "TypeSafe Jev relevance tagging for The Grand Illusion Radar. See lib/jev.mjs, tools/jev-export.mjs, and shadow/illusion_relevance/summary.json for the calibration run. Thresholds below are live (rank mode, on unless JEV_RANK=0); they only hide listings behind a UI toggle, never delete them.",
   "model": "jev-1.13.0",
   "route": null,
   "sites": {
     "illusion_relevance": {
-      "_where": "lib/jev.mjs, called from lib/engine.mjs behind JEV_SHADOW=1. State is the classify()-graded listing's own public fields; the current rule/lexicon verdict is logged alongside as baseline, never sent to Jev.",
+      "_where": "lib/jev.mjs, called from lib/engine.mjs: rank mode tags kept listings (on unless JEV_RANK=0); JEV_SHADOW=1 also logs every graded listing. State is the classify()-graded listing's own public fields; the current rule/lexicon verdict is logged alongside as baseline, never sent to Jev.",
       "state_shape": {
         "title": "listing title, as scraped",
         "description": "listing description or subtitle, trimmed to ~500 chars (empty string when the source never captured one, which is every source today)",
@@ -63,8 +63,9 @@
         }
       },
       "thresholds": {
-        "stage_illusion_noul_gte": 0.5,
-        "_basis": "placeholder pending shadow.py's proposed act/review cutoffs from the reliability table; never used to gate the live scan while JEV_SHADOW=1"
+        "demote_below_p_yes": 0.145,
+        "review_below_p_yes": 0.5,
+        "_basis": "2026-10-08, from shadow/illusion_relevance (495 shadowed listings, 55 hand labels). Half-minimum rule (migration-protocol step 4): the lowest P(yes) Jev gave a labelled true stage illusion was 0.29, so 'not-stage' is below 0.145. On the shadow set that hides 179 of 495 listings, 15 of the 27 labelled junk and none of the 28 labelled trues. 0.145 to 0.5 is 'review' (shown, flagged): all four labelled trues Jev called false sit there, terse Magic Auction-style titles (0.29 to 0.48). Re-check against new labels before moving either cutoff."
       },
       "before": {
         "usd_per_month": 0,

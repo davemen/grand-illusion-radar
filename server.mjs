@@ -25,7 +25,7 @@ app.get('/api/state', async (req, res) => {
 });
 
 app.get('/api/listings', async (req, res) => {
-  const { sort = 'deal', verdict, source, min, max, q, saved, deals, forsale } = req.query;
+  const { sort = 'deal', verdict, source, min, max, q, saved, deals, forsale, jev } = req.query;
   const [all, user] = await Promise.all([loadListings(), loadUser()]);
   const savedSet = new Set(user.saved), hiddenSet = new Set(user.hidden);
   let out = all.filter(l => !hiddenSet.has(l.id));
@@ -35,6 +35,8 @@ app.get('/api/listings', async (req, res) => {
   if (deals === '1') out = out.filter(l => l.deal);
   // Only things you can actually buy — no forum threads about one.
   if (forsale === '1') out = out.filter(l => buyableOf(l) && offerOf(l) !== 'lead');
+  // Jev's 'not-stage' band (see jev.config.json). Untagged listings always show.
+  if (jev === '1') out = out.filter(l => l.jev?.band !== 'not-stage');
   if (min) out = out.filter(l => (l.price ?? 0) >= +min);
   if (max) out = out.filter(l => l.price != null && l.price <= +max);
   if (q) { const rx = new RegExp(String(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');

@@ -43,7 +43,7 @@ def main(argv):
         t0 = time.time()
         try:
             req = json.loads(line)
-            res = jev_client.ask(req["state"], questions, site="shadow:" + site_name, model=model)
+            res = jev_client.ask(req["state"], questions, site=os.environ.get("JEV_SITE_PREFIX", "shadow:") + site_name, model=model)
             if res is None:
                 print(json.dumps({"error": "jev_client returned null (see decisions.jsonl)"}), flush=True)
                 continue

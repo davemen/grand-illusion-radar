@@ -163,15 +163,30 @@ price and it immediately becomes searchable, scorable and deal-tracked. Add a bu
 Data lives in `data/` (`listings.json`, `state.json`, `user.json` for saves/hides).
 Nothing leaves your machine.
 
-## Shadow-scoring listings with TypeSafe Jev (off by default)
+## Hiding non-illusions with TypeSafe Jev (on by default)
 
-`lib/jev.mjs` can score every graded listing with TypeSafe Jev — one request asking whether
-it's a genuine full-size stage illusion, what kind of thing it is, and whether it's actually
-purchasable — next to the classifier's own verdict, purely for offline comparison. It never
-changes what a scan shows: it's off unless `JEV_SHADOW=1`, it fails open (a Jev error just
-means no row gets logged), and it never does arithmetic on Jev's answer. Turning it on for a
-real scan appends one JSONL row per listing to `data/jev-shadow.jsonl`.
+Every scan asks TypeSafe Jev one batched request per kept listing — is this a genuine
+full-size stage illusion, what kind of thing is it, is it actually purchasable — and stores
+the answer on the listing as `jev: { p_yes, band }`. The band comes from the cutoffs in
+`jev.config.json` (`sites.illusion_relevance.thresholds`):
 
+| P(stage illusion) | Band | What you see |
+|---|---|---|
+| below 0.145 | `not-stage` | hidden while **✔ Hide non-illusions** is on; card says "Jev: not stage" |
+| 0.145 to 0.5 | `review` | shown, card says "Jev: unsure" |
+| 0.5 and up | `stage` | shown, no change |
+
+The cutoffs came from 495 shadowed listings and 55 hand labels: the lowest score Jev gave
+a real illusion was 0.29, so hiding is set at half that. On that set it hid 179 listings,
+15 of the 27 labelled junk and none of the real ones. Jev never changes a listing's verdict
+or score, never deletes anything, and fails open: an error, timeout or missing key just
+leaves the listing untagged and shown. Repeat listings are cached, so a rescan only pays
+for new ones (about $0.00005 each, estimated). Click the chip to see everything, or run
+with `JEV_RANK=0` to skip Jev entirely. `node tools/jev-tag.mjs` tags what's already on
+disk without scanning.
+
+`JEV_SHADOW=1` additionally logs every graded listing, rejects included, to
+`data/jev-shadow.jsonl` next to the classifier's verdict, for re-checking the cutoffs.
 The questions and criteria live in `jev.config.json`. To measure it offline against
 what's already on disk, without scanning anything:
 
@@ -182,5 +197,6 @@ python3 ~/.claude/skills/jev-savings/scripts/shadow.py jev.config.json illusion_
 
 See `shadow/illusion_relevance/summary.json` for agreement and the reliability table, and
 `shadow/illusion_relevance/labels.jsonl` for the hand-checked sample. `npm test` also runs
-`tools/test-jev.mjs`, which checks the off-by-default contract and that only named fields
-(title, description, price, source) ever leave the process.
+`tools/test-jev.mjs` (network-free), which checks the on/off switches, the banding against
+the configured cutoffs, fail-open on bad answers, and that only named fields (title,
+description, price, source) ever leave the process.
