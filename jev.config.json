@@ -9,13 +9,13 @@
         "title": "listing title, as scraped",
         "description": "listing description or subtitle, trimmed to ~500 chars (empty string when the source never captured one, which is every source today)",
         "price": "priceText or price formatted as text, e.g. '$3,200' or 'no price listed'",
-        "source": "sourceLabel, e.g. 'eBay', 'Magic Auction', 'The Magic Café'"
+        "source": "sourceLabel, e.g. 'eBay', 'Magic Auction', 'The Magic Caf\u00e9'"
       },
       "shadow_question": "stage_illusion",
       "questions": {
         "stage_illusion": {
           "type": "noul",
-          "instructions": "Based on `title`, `description`, `price` and `source`, is this a full-size stage illusion — a crated, performer-sized magic apparatus like a sawing cabinet, substitution trunk, or levitation frame — rather than a close-up trick, card gimmick, book, poster, or optical-illusion art object?",
+          "instructions": "Based on `title`, `description`, `price` and `source`, is this a full-size stage illusion \u2014 a crated, performer-sized magic apparatus like a sawing cabinet, substitution trunk, or levitation frame \u2014 rather than a close-up trick, card gimmick, book, poster, or optical-illusion art object?",
           "criteria": {
             "true": {
               "what": "a large, performer-scale illusion prop: a cabinet, trunk, box, table, or frame built for a stage act",
@@ -55,7 +55,7 @@
         },
         "for_sale": {
           "type": "noul",
-          "instructions": "Is this a purchasable listing — an item actually offered for sale, auction, or best offer — rather than a forum thread, discussion post, wanted ad, or review with no item being sold?",
+          "instructions": "Is this a purchasable listing \u2014 an item actually offered for sale, auction, or best offer \u2014 rather than a forum thread, discussion post, wanted ad, or review with no item being sold?",
           "criteria": {
             "true": "a marketplace or auction listing with a price or bid, or a classified offering an item",
             "false": "a forum post, a 'looking for' / wanted ad, a discussion thread, or anything without an actual item on offer"
@@ -70,6 +70,56 @@
       "before": {
         "usd_per_month": 0,
         "basis": "current path is free (rule/lexicon classify(), no LLM call); this site is additive shadow-mode cost only, not a replacement of a billed call"
+      }
+    },
+    "alert_quality": {
+      "_where": "tools/alert.py, the last gate before a SCREAMING DEAL email. Only listings that already passed every code gate (price <= max, firm price, verdict grail/confirmed, Jev band 'stage', deal score, not an excluded family) reach it, so volume is a handful a week. State is the listing's title plus a factual photo description written by one Haiku vision call (Jev is text-only); the description carries no verdict words, Jev makes the call, code sends the mail.",
+      "state_shape": {
+        "title": "listing title, as scraped",
+        "price": "price as text, e.g. '$800'",
+        "source": "sourceLabel, e.g. 'eBay'",
+        "photo_description": "4-6 factual sentences from a vision model about the listing photo: materials, finish, apparent builder grade, condition, and whether it is a real photo of the item"
+      },
+      "questions": {
+        "professional_grade": {
+          "type": "noul",
+          "instructions": "Based on `photo_description` and `title`, is this a well-built, professional-quality stage illusion in presentable condition, the kind a working illusionist would put on a stage today, rather than something janky?",
+          "criteria": {
+            "true": {
+              "what": "solid professional construction (hardwood, aluminium, quality laminate or paint, clean edges, proper hardware), decoration that looks deliberate, intact and usable, at most normal road wear",
+              "examples": [
+                "A tall cabinet in glossy black and gold lacquer with clean edges and chrome hardware, on a matching base with casters, photographed upright in a warehouse; no visible damage.",
+                "An aluminium-framed box with professionally printed panels, a road case beside it, light scuffs on the case only."
+              ]
+            },
+            "false": {
+              "what": "homemade or hobby-grade (bare plywood, visible screws and glue, hand-painted lettering, cardboard, PVC), toy or party-store grade, broken, water-damaged, missing parts, peeling or heavily worn, or the photo is too dark, cropped or blurry to judge",
+              "examples": [
+                "A plywood box with uneven hand-brushed paint, exposed screw heads and a piece of tape over one door hinge.",
+                "A small plastic toy version of the illusion in retail packaging.",
+                "The cabinet has a cracked panel and the finish is peeling along the bottom edge.",
+                "A dim, blurry photo of a box in a garage; only one corner is visible."
+              ]
+            }
+          }
+        },
+        "real_photo": {
+          "type": "noul",
+          "instructions": "Based on `photo_description`, is the photo an actual photograph of the specific item being sold, rather than a stock image, catalog render, drawing, or a photo of a performer on stage?",
+          "criteria": {
+            "true": "a photograph of the physical item itself, as it sits now (in a room, garage, warehouse, on a stage without an audience)",
+            "false": "a stock or catalog image, 3D render, drawing, poster, logo, a show photo with a performer mid-trick, or no usable photo"
+          }
+        }
+      },
+      "thresholds": {
+        "send_min_professional_grade": 0.7,
+        "send_min_real_photo": 0.5,
+        "_basis": "2026-10-22, ESTIMATED and uncalibrated: only ~15 priced deals exist, far short of the 300-input shadow. Conservative prior: hold anything Jev is not fairly sure is professional. Every gate result is logged to data/alerts.json with its probabilities; re-tune once there are 30+ judged candidates."
+      },
+      "before": {
+        "usd_per_month": 0,
+        "basis": "new site; no previous path"
       }
     }
   }

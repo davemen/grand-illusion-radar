@@ -1,0 +1,14 @@
+{
+  "_comment": "SCREAMING DEAL email rules for tools/alert.py. Recipient and credentials are read at run time from ~/Jarvis/config.json (mail.owner, the is_jarvis account, brain.api_key) and never stored here.",
+  "max_price": 1000,
+  "min_deal_score": 80,
+  "min_pct_off": 50,
+  "verdicts": ["grail", "confirmed"],
+  "firm_price_only": true,
+  "exclude_illusions": [
+    "Substitution Trunk",
+    "Asrah Levitation", "Super X Levitation", "Aga Levitation", "Levitation",
+    "Broom Suspension", "Chair Suspension"
+  ],
+  "_exclude_why": "Dave already owns a sub trunk and a levitation (2026-10-22). Match is on classify()'s illusion names, so a listing is skipped if any matched name is here."
+}

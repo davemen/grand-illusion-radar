@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Deep scan + SCREAMING DEAL alert every 4 hours. Install:
+     cp tools/launchd/com.davemendlen.illusionfinder-alert.plist ~/Library/LaunchAgents/ &&
+     launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.davemendlen.illusionfinder-alert.plist -->
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.davemendlen.illusionfinder-alert</string>
+  <key>ProgramArguments</key><array>
+    <string>/bin/sh</string><string>-c</string>
+    <string>mkdir -p data/logs &amp;&amp; exec /opt/homebrew/bin/node tools/scan.mjs &gt;&gt; data/logs/scan.log 2&gt;&amp;1</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/davemendlen/Documents/Projects/IllusionFinder</string>
+  <key>EnvironmentVariables</key><dict>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+  <key>StartInterval</key><integer>14400</integer>
+  <key>RunAtLoad</key><false/>
+</dict></plist>

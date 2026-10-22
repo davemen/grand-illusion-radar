@@ -9,7 +9,10 @@
     "reclassify": "node tools/reclassify.mjs",
     "jev-export": "node tools/jev-export.mjs",
     "publish": "node tools/build-static.mjs",
-    "jev-tag": "node tools/jev-tag.mjs"
+    "jev-tag": "node tools/jev-tag.mjs",
+    "scan": "node tools/scan.mjs",
+    "alert": "python3 tools/alert.py",
+    "login": "node tools/login.mjs"
   },
   "keywords": [],
   "author": "",
