@@ -116,7 +116,45 @@ and the photo itself (a real photo of this item, or a stock image, render, drawi
 photo; lighting and sharpness). Describe only; do not recommend or rate."""
 
 
-def describe_photo(x, api_key, workspace_id):
+def describe_photo_gemini(x, key, model):
+    img, ctype = fetch_image(big_image(x["image"]))
+    body = {"contents": [{"parts": [
+        {"inline_data": {"mime_type": ctype, "data": base64.b64encode(img).decode()}},
+        {"text": VISION_PROMPT.format(title=x["title"])},
+    ]}], "generationConfig": {"maxOutputTokens": 600}}
+    req = urllib.request.Request(
+        "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % model,
+        data=json.dumps(body).encode(), method="POST",
+        headers={"x-goog-api-key": key, "content-type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=90) as r:
+            res = json.load(r)
+    except urllib.error.HTTPError as e:
+        raise RuntimeError("gemini vision %s: %s" % (e.code, e.read()[:300].decode("utf-8", "replace")))
+    parts = ((res.get("candidates") or [{}])[0].get("content") or {}).get("parts") or []
+    text = "".join(p.get("text", "") for p in parts).strip()
+    if not text:
+        raise RuntimeError("gemini vision returned no text")
+    return text
+
+
+def describe_photo(x, brain):
+    """Gemini first (Dave's Google plan), Anthropic only if Gemini is missing or fails."""
+    errs = []
+    if brain.get("gemini_key"):
+        try:
+            return describe_photo_gemini(x, brain["gemini_key"], brain.get("gemini_model") or "gemini-2.5-flash")
+        except Exception as e:
+            errs.append(str(e)[:150])
+    if (brain.get("api_key") or "").startswith("sk-ant"):
+        try:
+            return describe_photo_anthropic(x, brain["api_key"], brain.get("workspace_id"))
+        except Exception as e:
+            errs.append(str(e)[:150])
+    raise RuntimeError(" | ".join(errs) or "no vision key in Jarvis config")
+
+
+def describe_photo_anthropic(x, api_key, workspace_id):
     img, ctype = fetch_image(big_image(x["image"]))
     body = {
         "model": VISION_MODEL,
@@ -269,9 +307,8 @@ def main(argv):
 
     jarvis = load(JARVIS_CONFIG, {})
     brain = jarvis.get("brain") or {}
-    api_key = brain.get("api_key") or ""
-    if not api_key.startswith("sk-ant"):
-        print("no Anthropic key in Jarvis config; holding all candidates")
+    if not (brain.get("gemini_key") or (brain.get("api_key") or "").startswith("sk-ant")):
+        print("no Gemini or Anthropic key in Jarvis config; holding all candidates")
         return 1
     account = jarvis_account(jarvis)
     to = (jarvis.get("mail") or {}).get("owner")
@@ -284,7 +321,7 @@ def main(argv):
         entry = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), "title": x["title"], "price": x["price"],
                  "image": x["image"], "url": x["url"], "deal_score": x["deal"]["score"]}
         try:
-            x["_photo"] = describe_photo(x, api_key, brain.get("workspace_id"))
+            x["_photo"] = describe_photo(x, brain)
             judged = judge(x, site, model)
             if judged is None or None in judged.values():
                 raise RuntimeError("jev returned no answer")
