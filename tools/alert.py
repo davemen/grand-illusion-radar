@@ -211,9 +211,9 @@ def app_link(x):
 
 
 def publish_snapshot():
-    """Rebuild docs/ and push it, so the app link in the email already contains the listing."""
-    steps = [["npm", "run", "-s", "publish"], ["git", "add", "docs"],
-             ["git", "commit", "-q", "-m", "Refresh snapshot for deal alert"], ["git", "push", "-q"]]
+    """Rebuild docs/ and push it. Runs every pass, so the live app tracks the scan and any email link resolves."""
+    steps = [["git", "pull", "-q", "--rebase", "--autostash"], ["npm", "run", "-s", "publish"], ["git", "add", "docs"],
+             ["git", "commit", "-q", "-m", "Refresh snapshot"], ["git", "push", "-q"]]
     for cmd in steps:
         r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=180)
         if r.returncode and cmd[1] != "commit":   # commit exits 1 when nothing changed
@@ -302,6 +302,10 @@ def main(argv):
             continue
         cands.append(x)
     print(f"{len(listings)} listings, {len(cands)} candidate(s)")
+    published = False
+    if not dry and not only and listings:   # every run, deal or not, so the live app never goes stale
+        published = publish_snapshot()
+        print("snapshot published" if published else "snapshot NOT published")
     if not cands:
         return 0
 
@@ -316,7 +320,6 @@ def main(argv):
         print("no mail.owner in Jarvis config; holding all candidates")
         return 1
 
-    published = False
     for x in cands:
         entry = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), "title": x["title"], "price": x["price"],
                  "image": x["image"], "url": x["url"], "deal_score": x["deal"]["score"]}
@@ -340,7 +343,7 @@ def main(argv):
             print("WOULD SEND", x["title"][:70], judged)
             continue
         else:
-            if not published:   # once per run, just before the first email, so its app link resolves
+            if not published:   # fallback if the pass-start publish failed
                 published = publish_snapshot()
             send(build_email(x, judged, account["user"], to), account)
             entry.update(status="sent")
