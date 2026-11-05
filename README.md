@@ -127,7 +127,7 @@ Measured on a real deep sweep (2,974 raw listings):
 | AliExpress | 191 | Works, but ~all sub-$20 close-up props. Floating tables are the exception. |
 | Potter & Potter | 7 | Auction events, incl. *Houdini Returns: The Centennial Auction*. |
 | Alibaba | 0 | **CAPTCHA-blocked**, including supplier storefronts and from a clean browser profile. Manual link only. |
-| Facebook | — | **Login-walled.** `facebook.com/usedmagicillusions` returns a "Log In" page with no posts to anyone unauthenticated. Manual link only. |
+| Facebook | 16 | `facebook.com/usedmagicillusions`, read signed in with a persistent Chrome profile (`npm run login` once, headed; the profile stays in `data/` and never leaves the machine). Posts are anchored on their `$` price, merged by link, and graded as broker posts (topicality given, floor `likely`). "Or best offer" posts are not treated as firm prices. |
 
 Alibaba answers the first request then locks out the search endpoint. Homepage priming
 (the trick that beats eBay) does not help. Rather than build a CAPTCHA solver, the app
@@ -200,3 +200,8 @@ See `shadow/illusion_relevance/summary.json` for agreement and the reliability t
 `tools/test-jev.mjs` (network-free), which checks the on/off switches, the banding against
 the configured cutoffs, fail-open on bad answers, and that only named fields (title,
 description, price, source) ever leave the process.
+
+
+## Deal emails and deep links
+
+`tools/alert.py` emails a screaming deal with an "Open on the radar" button (`<app>/#l=<listing id>`) and the original listing link. It publishes `docs/` first so the link resolves. Schedule: `tools/launchd/com.davemendlen.illusionfinder-alert.plist` (every 4 hours; install after `npm run login`).

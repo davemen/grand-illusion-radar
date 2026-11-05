@@ -732,6 +732,16 @@ function events() {
   es.onerror = () => {};
 }
 
+/* ── Deep link: #l=<listing id> opens that listing's sheet (used by the deal emails) ── */
+function openFromHash() {
+  const m = location.hash.match(/^#l=(.+)$/);
+  if (!m) return;
+  const id = decodeURIComponent(m[1]);
+  const l = (SNAPSHOT?.listings || state.list || []).find(x => x.id === id) || state.list.find(x => x.id === id);
+  if (l) openSheet(l, null);
+  else $('#scanlog').textContent = 'That listing is not in this snapshot yet. Refresh in a minute.';
+}
+
 /* ── Boot ──────────────────────────────────────────── */
 (async function init() {
   let st;
@@ -843,5 +853,7 @@ function events() {
   manual();
   if (st.scanning) setScanning(true);
   events();
-  load();
+  await load();
+  openFromHash();
+  addEventListener('hashchange', openFromHash);
 })();

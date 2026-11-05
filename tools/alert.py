@@ -21,9 +21,11 @@ import os
 import re
 import smtplib
 import ssl
+import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from email.message import EmailMessage
 from html import escape
@@ -163,6 +165,25 @@ def jarvis_account(cfg):
     raise RuntimeError("no is_jarvis mail account in ~/Jarvis/config.json")
 
 
+APP_URL = "https://davemen.github.io/grand-illusion-radar/"
+
+
+def app_link(x):
+    return APP_URL + "#l=" + urllib.parse.quote(x["id"], safe="")
+
+
+def publish_snapshot():
+    """Rebuild docs/ and push it, so the app link in the email already contains the listing."""
+    steps = [["npm", "run", "-s", "publish"], ["git", "add", "docs"],
+             ["git", "commit", "-q", "-m", "Refresh snapshot for deal alert"], ["git", "push", "-q"]]
+    for cmd in steps:
+        r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=180)
+        if r.returncode and cmd[1] != "commit":   # commit exits 1 when nothing changed
+            print("publish step failed:", " ".join(cmd), (r.stderr or r.stdout)[-200:])
+            return False
+    return True
+
+
 def build_email(x, judged, sender, to):
     deal = x["deal"]
     first = (x.get("illusions") or [{}])[0].get("name") or "Stage illusion"
@@ -181,11 +202,12 @@ def build_email(x, judged, sender, to):
     lines += ["", "What the photo shows: " + x["_photo"], "",
               "Quality gate: professional grade {:.0%}, real photo {:.0%}.".format(
                   judged["professional_grade"], judged["real_photo"]),
-              "", x["url"], "", "Jarvis, via the Grand Illusion Radar"]
+              "", "On the radar: " + app_link(x), "Original listing: " + x["url"], "", "Jarvis, via the Grand Illusion Radar"]
     text = "\n".join(lines)
 
     img = escape(big_image(x["image"]))
     url = escape(x["url"])
+    app = escape(app_link(x))
     src = escape(x.get("sourceLabel", ""))
     extra = (" · " + escape(builders)) if builders else ""
     html = f"""<div style="font-family:Georgia,serif;max-width:560px;margin:auto;color:#1b1712">
@@ -197,7 +219,8 @@ def build_email(x, judged, sender, to):
 <p style="font:14px/1.5 -apple-system,sans-serif;color:#6b5f50;margin:0 0 16px">{src} · against {escape(basis)}{extra}</p>
 <p style="font:15px/1.55 -apple-system,sans-serif;margin:0 0 16px">{escape(x['_photo'])}</p>
 <p style="font:12px/1.5 -apple-system,sans-serif;color:#8a7d6c;margin:0 0 22px">Quality gate: professional grade {judged['professional_grade']:.0%} · real photo {judged['real_photo']:.0%}</p>
-<a href="{url}" style="display:inline-block;background:#1b1712;color:#f4e7c8;text-decoration:none;font:600 15px -apple-system,sans-serif;padding:12px 22px;border-radius:999px">Open the listing</a>
+<a href="{app}" style="display:inline-block;background:#1b1712;color:#f4e7c8;text-decoration:none;font:600 15px -apple-system,sans-serif;padding:12px 22px;border-radius:999px">Open on the radar</a>
+<a href="{url}" style="display:inline-block;margin-left:10px;color:#6b5f50;font:14px -apple-system,sans-serif">Original listing</a>
 <p style="font:12px -apple-system,sans-serif;color:#8a7d6c;margin-top:28px">Jarvis, via the Grand Illusion Radar</p></div>"""
 
     msg = EmailMessage()
@@ -256,6 +279,7 @@ def main(argv):
         print("no mail.owner in Jarvis config; holding all candidates")
         return 1
 
+    published = False
     for x in cands:
         entry = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), "title": x["title"], "price": x["price"],
                  "image": x["image"], "url": x["url"], "deal_score": x["deal"]["score"]}
@@ -279,6 +303,8 @@ def main(argv):
             print("WOULD SEND", x["title"][:70], judged)
             continue
         else:
+            if not published:   # once per run, just before the first email, so its app link resolves
+                published = publish_snapshot()
             send(build_email(x, judged, account["user"], to), account)
             entry.update(status="sent")
             print("SENT  ", x["title"][:70], judged)
